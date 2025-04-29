@@ -95,65 +95,86 @@ root.title("استبيان إضافة مستفيد")
 # Maximize window (Windows-specific)
 root.wm_state('zoomed')  
 
-# Make root window responsive
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
-
 # Custom fonts
 normal_font = font.Font(family="Segoe UI")
 bold_font = font.Font(family="Segoe UI", weight="bold")
 
-# Create fram
+# Create main frame
 frm = ttk.Frame(root, padding=20)
-frm.grid()
+frm.pack(fill="both", expand=True, padx=20, pady=20)
 
-# Entry fields
-first_name_entry = ttk.Entry(frm)
-last_name_entry = ttk.Entry(frm)
-national_number_entry = ttk.Entry(frm)
-city_entry = ttk.Combobox(frm, values=cities, state="readonly")
+# Title Label
+ttk.Label(frm, text="استمارة (معتقل - مختفي - ناجي - شاهد)", font=bold_font).pack(pady=10)
 
-# Title
-ttk.Label(frm, text='استمارة (معتقل - مختفي - ناجي - شاهد)', font=bold_font).grid(
-    row=0, column=0, columnspan=2, pady=10, sticky='n'
-)
+# Entry fields and labels (side-by-side)
 
-# Labels
-ttk.Label(frm, text="الاسم الأول").grid(row=1, column=2, padx=10, pady=5)
-ttk.Label(frm, text="الاسم الأخير").grid(row=2, column=2, padx=10, pady=5)
-ttk.Label(frm, text="الرقم الوطني").grid(row=3, column=2, padx=10, pady=5)
-ttk.Label(frm, text="المدينة").grid(row=4, column=2, padx=10, pady=5)
-ttk.Label(frm, text="الصورة الشخصية").grid(row=5, column=2, padx=10, pady=5)
-ttk.Label(frm, text="الجنس").grid(row=6, column=2, padx=10, pady=5)
-ttk.Label(frm, text="تاريخ الولادة").grid(row=7, column=2, padx=10, pady=5)
 
-# Entry fields pos
-first_name_entry.grid(row=1, column=1, padx=10, pady=8)
-last_name_entry.grid(row=2, column=1, padx=10, pady=8)
-national_number_entry.grid(row=3, column=1, padx=10, pady=8)
-city_entry.grid(row=4, column=1, padx=10, pady=8)
+first_name_frame = ttk.Frame(frm)
+first_name_frame.pack(pady=10)
+
+ttk.Label(first_name_frame, text="الاسم الأول").pack(side="right", padx=5)
+first_name_entry = ttk.Entry(first_name_frame)
+first_name_entry.pack(side="right", padx=10)
+
+last_name_frame = ttk.Frame(frm)
+last_name_frame.pack(pady=10)
+
+ttk.Label(last_name_frame, text="الاسم الأخير").pack(side="right", padx=5)
+first_name_entry = ttk.Entry(last_name_frame)
+first_name_entry.pack(side="right", padx=10)
+
+entry_frame = ttk.Frame(frm)
+entry_frame.pack(pady=10)
+
+ttk.Label(entry_frame, text="الاسم الأخير").pack(side="left", padx=5)
+last_name_entry = ttk.Entry(entry_frame)
+last_name_entry.pack(side="left", padx=10)
+
+ttk.Label(entry_frame, text="الرقم الوطني").pack(side="left", padx=5)
+national_number_entry = ttk.Entry(entry_frame)
+national_number_entry.pack(side="left", padx=10)
+
+ttk.Label(entry_frame, text="المدينة").pack(side="left", padx=5)
+city_entry = ttk.Combobox(entry_frame, values=["دمشق", "حلب", "اللاذقية"], state="readonly")
+city_entry.pack(side="left", padx=10)
+
+# Profile Picture Selection
 profile_path = None
-ttk.Button(frm, text="اختر الصورة الشخصية", command=lambda: file_picker(set_profile_path, title=" اختر صورة شخصية")).grid(row=5, column=1)
+ttk.Button(frm, text="اختر الصورة الشخصية", command=lambda: file_picker(set_profile_path, title="اختر صورة شخصية")).pack(pady=5)
+
+# Gender Selection
+gender_frame = ttk.Frame(frm)
+gender_frame.pack(pady=5)
 selected_gender = StringVar()
-ttk.Radiobutton(frm, text='ذكر', variable=selected_gender, value='ذكر').grid(row=6, column=0)
-ttk.Radiobutton(frm, text='انثى', variable=selected_gender, value='انثى').grid(row=6, column=1)
+ttk.Label(gender_frame, text="الجنس").pack(side="left", padx=5)
+ttk.Radiobutton(gender_frame, text="ذكر", variable=selected_gender, value="ذكر").pack(side="left", padx=5)
+ttk.Radiobutton(gender_frame, text="أنثى", variable=selected_gender, value="أنثى").pack(side="left", padx=5)
 
-selected_day = ttk.Spinbox(frm, from_=1, to=31, width=5).grid(row=7, column=1)
+# Date of Birth Selection (Spinboxes)
+dob_frame = ttk.Frame(frm)
+dob_frame.pack(pady=5)
+ttk.Label(dob_frame, text="تاريخ الولادة").pack(side="left", padx=5)
+selected_day = ttk.Spinbox(dob_frame, from_=1, to=31, width=5)
+selected_day.pack(side="left", padx=5)
 
+selected_month = ttk.Spinbox(dob_frame, from_=1, to=12, width=5)
+selected_month.pack(side="left", padx=5)
 
+selected_year = ttk.Spinbox(dob_frame, from_=1950, to=2035, width=5)
+selected_year.pack(side="left", padx=5)
 
-# Buttons
+# Submit Button
 ttk.Button(
-     frm,
-     text="إضافة", 
-     command=lambda: submit_data(
-         first_name=first_name_entry.get(),
-         last_name=last_name_entry.get(),
-         national_number=national_number_entry.get(),
-         city=city_entry.get(),
-         profile_path=profile_path,
-         gender=selected_gender.get())
-    ).grid(row=8, column=0, columnspan=2, pady=10)
-# submit_button = ctk.CTkButton(frm, text="إضافة", command=submit_data).grid(row=5, column=0)
+    frm,
+    text="إضافة", 
+    command=lambda: submit_data(
+        first_name=first_name_entry.get(),
+        last_name=last_name_entry.get(),
+        national_number=national_number_entry.get(),
+        city=city_entry.get(),
+        profile_path=profile_path,
+        gender=selected_gender.get()
+    )
+).pack(pady=10)
 
 root.mainloop()
