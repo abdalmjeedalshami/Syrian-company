@@ -29,74 +29,6 @@ def set_profile_path(path):
     global profile_path
     profile_path = path
 
-def file_picker(on_file_picked, title='اختر ملف'):
-    first_name = first_name_entry.get()
-
-    if not first_name:
-        messagebox.showwarning("معلومات ناقصة", "يرجى إدخال الاسم أولاً قبل اختيار الصورة")
-        return
-
-    # Choose image
-    filepath = filedialog.askopenfilename(
-         title=title,
-        filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")]
-    )
-
-    if filepath:
-         on_file_picked(filepath)
-
-def submit_data(first_name, father_name, last_name, mother_name, gender, date, city, residential_registration, national_number, full_address, profile_path, education, academic_specialization, job, current_job, height, weight, eye_color, hair_color, skin_color, unique_features, children_number, children):
-    
-    if not first_name or not last_name or not national_number or not city or not profile_path or not gender or not date:
-        messagebox.showwarning("معلومات مفقودة", "الرجاء تعبئة كل الحقول")
-        return
-    
-    try:
-        wb = load_workbook(EXCEL_FILE)
-    except FileNotFoundError:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["الاسم", "اسم الأب", "الكنية", "اسم الأم", "الجنس", "تاريخ الولادة", "قيد النفوس", "الرقم الوطني", "العنوان المفصّل", "صورة وثيقة شخصية", "المستوى العلمي", "الاختصاص", "المهنة التي يتقنها", "المهنة الحالية", "الطول", "الوزن", "لون العينين", "لون الشعر", "لون البشرة", "علامات فارقة", "الوضع الاجتماعي", "عدد الأولاد", "الأولاد"])  # Add headers
-    else:
-        ws = wb.active
-
-    # df = pd.DataFrame(children, columns=['Name', 'Gender'])
-    # Convert children list from tuples to a formatted string
-    children = ", ".join([f"{name} ({gender})" for name, gender in children])
-    ws.append([first_name, father_name, last_name, mother_name, gender, date, residential_registration, national_number, full_address, profile_path, education, academic_specialization, job, current_job, height, weight, eye_color, hair_color, skin_color, unique_features, "", children_number, children])
-    row = ws.max_row
-
-    # Helper to add hyperlink to a cell
-    def set_hyperlink(col, label, path):
-            cell = ws.cell(row=row, column=col)
-            cell.value = label
-            cell.hyperlink = path.replace("\\", "/")
-            cell.font = Font(color="0000FF", underline="single")
-
-    # Create folder based on first name
-    user_folder = os.path.join(PROFILE_FOLDER, first_name)
-    os.makedirs(user_folder, exist_ok=True)
-
-    # Copy image to user folder
-    filename = os.path.basename(profile_path)
-    saved_path = os.path.join(user_folder, filename)
-    shutil.copy(profile_path, saved_path)
-
-    # Set hyperlinks
-    set_hyperlink(10, "عرض الصورة", saved_path)
-
-    wb.save(EXCEL_FILE)
-
-    first_name_entry.delete(0, END)
-    last_name_entry.delete(0, END)
-    national_number_entry.delete(0, END)
-    city_entry.set("")
-    selected_gender.set("")
-    selected_day.set("")
-    selected_month.set("")
-    selected_year.set("")
-
-    messagebox.showinfo("تمت العملية بنجاح", "تم إضافة بيانات المستفيد")
 
 
 # Create GUI
@@ -140,36 +72,6 @@ canvas.configure(yscrollcommand=scrollbar.set)
 # Title
 ttk.Label(content_frame, text="استمارة (معتقل - مختفي - ناجي - شاهد)", font=bold_font).pack(pady=10)
 
-def create_labeled_entry(parent, label_text):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    entry = ttk.Entry(frame)
-    entry.pack(side="right", padx=5)
-    return entry
-
-def create_labeled_combobox(parent, label_text, values):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    combobox = ttk.Combobox(frame, values=values, state="readonly")
-    combobox.pack(side="right", padx=5)
-    return combobox
-
-def create_labeled_spinbox(parent, label_text, from_, to):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    spinbox = ttk.Spinbox(frame, from_=from_, to=to, width=5)
-    spinbox.pack(side="right", padx=5)
-    return spinbox
-
-def create_labeled_button(parent, label_text, button_text, command):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    ttk.Button(frame, text=button_text, command=command).pack(side="right", padx=5)
-
 first_name_entry = create_labeled_entry(content_frame, "الاسم الأول")
 father_name_entry = create_labeled_entry(content_frame, "الاسم الأب")
 last_name_entry = create_labeled_entry(content_frame, "الكنية")
@@ -204,7 +106,7 @@ full_address_entry = create_labeled_entry(content_frame, "العنوان الم�
 
 # Profile picture button
 profile_path = None
-create_labeled_button(content_frame, "الصورة الشخصية", "اختر الصورة الشخصية", lambda: file_picker(set_profile_path, title="اختر صورة شخصية"))
+create_labeled_button(content_frame, "الصورة الشخصية", "اختر الصورة الشخصية", lambda: file_picker(set_profile_path, title="اختر صورة شخصية", first_name=first_name_entry.get()))
 
 education_entry = create_labeled_combobox(content_frame, "المستوى العلمي", ["أمّي", "ابتدائي", "إعدادي", "ثانوي", "معهد", "جامعة", "ماجستر", "دكتور"])
 academic_specialization_entry = create_labeled_entry(content_frame, "الاختصاص")
@@ -226,8 +128,6 @@ social_status_entry = create_labeled_combobox(content_frame, "الوضع الا�
 # Children
 children_number_entry = create_labeled_entry(content_frame, "عدد الأطفال")
 
-
-
 # Frame to hold generated child entry fields
 children_frame = ttk.Frame(content_frame)
 children_frame.pack(pady=10)
@@ -235,35 +135,24 @@ children_frame.pack(pady=10)
 # Button to generate child entries
 ttk.Button(children_frame, text="إنشاء حقول الأولاد", command=lambda: generate_entries(children_frame=children_frame, children_number_entry=children_number_entry, children_entries=children_entries)).pack(side="right", pady=5)
 
-
-
 # List to store child entry widgets
 children_entries = []
 
+from models.form_data import FormData
 
-
-# Extract names & genders
-
-
-
-# Buttons
-add_btn_frame = ttk.Frame(content_frame)
-add_btn_frame.pack(pady=10)
-ttk.Button(
-    add_btn_frame,
-    text="إضافة", 
-    command=lambda: submit_data(
+def on_submit():
+    form_data = FormData(
         first_name=first_name_entry.get(),
         father_name=father_name_entry.get(),
         last_name=last_name_entry.get(),
         mother_name=mother_name_entry.get(),
         gender=selected_gender.get(),
-        date=get_full_date(selected_day.get(), selected_month.get(), selected_year.get()),
+        date=f"{selected_day.get()}/{selected_month.get()}/{selected_year.get()}",
         city=city_entry.get(),
         residential_registration=residential_registration_entry.get(),
         national_number=national_number_entry.get(),
         full_address=full_address_entry.get(),
-        profile_path=profile_path,
+        profile_path=profile_path,  # Make sure this is updated via file_picker
         education=education_entry.get(),
         academic_specialization=academic_specialization_entry.get(),
         job=job_entry.get(),
@@ -274,8 +163,20 @@ ttk.Button(
         hair_color=hair_color_entry.get(),
         skin_color=skin_color_entry.get(),
         unique_features=unique_features_entry.get(),
-        children_number=children_number_entry.get(),
-        children=[(entry.get(), gender.get()) for entry, gender in children_entries])
+        social_status=social_status_entry.get(),  # You must have this field
+        children_number=children_number_entry.get()
+    )
+    submit_data(form_data, [(entry.get(), gender.get()) for entry, gender in children_entries])
+
+
+
+# Buttons
+add_btn_frame = ttk.Frame(content_frame)
+add_btn_frame.pack(pady=10)
+ttk.Button(
+    add_btn_frame,
+    text="إضافة", 
+    command=on_submit
 ).pack(pady=10)
 # submit_button = ctk.CTkButton(frm, text="إضافة", command=submit_data).grid(row=5, column=0)
 
