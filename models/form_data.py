@@ -25,3 +25,7 @@ class FormData:
     unique_features: str
     social_status: str
     children_number: str
+    children: list
+    phone_number: str
+    social_media: str
+    nationality: str

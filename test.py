@@ -1,285 +1,83 @@
-from tkinter import *
-from tkinter import ttk, messagebox, font, filedialog
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import Font
-import customtkinter as ctk
-import os
-import shutil
-import pandas as pd
-from utils.methods import *
+import tkinter as tk
+from tkinter import ttk
 
-
-EXCEL_FILE = 'data.xlsx'  # Ensure this file exists
-PROFILE_FOLDER = 'images/profile'
-cities = ["دمشق", "حلب", "اللاذقية", "حمص", "طرطوس"]
-
-
-# Update scroll region when adding new widgets
-def update_scroll_region(event):
-    canvas.configure(scrollregion=canvas.bbox("all"))
-
-# Recalculate centering after resize
-def resize_centering(event):
-    canvas.coords(content_window, (canvas.winfo_width() // 2, 0))
-
-def get_full_date(day, month, year):
-    return f"{day}-{month}-{year}"
-
-def set_profile_path(path):
-    global profile_path
-    profile_path = path
-
-def file_picker(on_file_picked, title='اختر ملف'):
-    first_name = first_name_entry.get()
-
-    if not first_name:
-        messagebox.showwarning("معلومات ناقصة", "يرجى إدخال الاسم أولاً قبل اختيار الصورة")
-        return
-
-    # Choose image
-    filepath = filedialog.askopenfilename(
-         title=title,
-        filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")]
-    )
-
-    if filepath:
-         on_file_picked(filepath)
-
-def submit_data(first_name, father_name, last_name, mother_name, gender, date, city, residential_registration, national_number, full_address, profile_path, education, academic_specialization, job, current_job, height, weight, eye_color, hair_color, skin_color, unique_features, children_number, children):
-    
-    if not first_name or not last_name or not national_number or not city or not profile_path or not gender or not date:
-        messagebox.showwarning("معلومات مفقودة", "الرجاء تعبئة كل الحقول")
-        return
-    
-    try:
-        wb = load_workbook(EXCEL_FILE)
-    except FileNotFoundError:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["الاسم", "اسم الأب", "الكنية", "اسم الأم", "الجنس", "تاريخ الولادة", "قيد النفوس", "الرقم الوطني", "العنوان المفصّل", "صورة وثيقة شخصية", "المستوى العلمي", "الاختصاص", "المهنة التي يتقنها", "المهنة الحالية", "الطول", "الوزن", "لون العينين", "لون الشعر", "لون البشرة", "علامات فارقة", "الوضع الاجتماعي", "عدد الأولاد", "الأولاد"])  # Add headers
-    else:
-        ws = wb.active
-
-    # df = pd.DataFrame(children, columns=['Name', 'Gender'])
-    # Convert children list from tuples to a formatted string
-    children = ", ".join([f"{name} ({gender})" for name, gender in children])
-    ws.append([first_name, father_name, last_name, mother_name, gender, date, residential_registration, national_number, full_address, profile_path, education, academic_specialization, job, current_job, height, weight, eye_color, hair_color, skin_color, unique_features, "", children_number, children])
-    row = ws.max_row
-
-    # Helper to add hyperlink to a cell
-    def set_hyperlink(col, label, path):
-            cell = ws.cell(row=row, column=col)
-            cell.value = label
-            cell.hyperlink = path.replace("\\", "/")
-            cell.font = Font(color="0000FF", underline="single")
-
-    # Create folder based on first name
-    user_folder = os.path.join(PROFILE_FOLDER, first_name)
-    os.makedirs(user_folder, exist_ok=True)
-
-    # Copy image to user folder
-    filename = os.path.basename(profile_path)
-    saved_path = os.path.join(user_folder, filename)
-    shutil.copy(profile_path, saved_path)
-
-    # Set hyperlinks
-    set_hyperlink(10, "عرض الصورة", saved_path)
-
-    wb.save(EXCEL_FILE)
-
-    first_name_entry.delete(0, END)
-    last_name_entry.delete(0, END)
-    national_number_entry.delete(0, END)
-    city_entry.set("")
-    selected_gender.set("")
-    selected_day.set("")
-    selected_month.set("")
-    selected_year.set("")
-
-    messagebox.showinfo("تمت العملية بنجاح", "تم إضافة بيانات المستفيد")
-
-
-# Create GUI
-root = Tk()
-root.iconbitmap("app_icon.ico")
-root.title("استبيان إضافة مستفيد")
+root = tk.Tk()
 root.geometry("500x500")
 
-# Maximize window (Windows-specific)
-root.wm_state('zoomed')  
-
-# Custom fonts
-normal_font = font.Font(family="Segoe UI")
-bold_font = font.Font(family="Segoe UI", weight="bold")
-
-# Create a frame for the scrollbar and canvas
-scroll_frame = ttk.Frame(root)
-scroll_frame.pack(fill="both", expand=True)
-
-# Create canvas to hold the scrollable content
-canvas = Canvas(scroll_frame)
-canvas.pack(side="left", fill="both", expand=True)
-
-# Add scrollbar
-scrollbar = ttk.Scrollbar(scroll_frame, orient="vertical", command=canvas.yview)
-scrollbar.pack(side="right", fill="y")
-
-# Create a frame inside the canvas to hold the actual content
-content_frame = ttk.Frame(canvas)
-
-# Add window to canvas, using `winfo_width()` for dynamic centering
-canvas.create_window((canvas.winfo_width() // 2, 0), window=content_frame, anchor="n")
-
-# Configure scrollbar
-canvas.configure(yscrollcommand=scrollbar.set)
-
-# Create main frame
-# frm = ttk.Frame(root, padding=20)
-# frm.pack(fill="both", expand=True, padx=20, pady=20)
-
-# Title
-ttk.Label(content_frame, text="استمارة (معتقل - مختفي - ناجي - شاهد)", font=bold_font).pack(pady=10)
-
-def create_labeled_entry(parent, label_text):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    entry = ttk.Entry(frame)
-    entry.pack(side="right", padx=5)
-    return entry
-
-def create_labeled_combobox(parent, label_text, values):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    combobox = ttk.Combobox(frame, values=values, state="readonly")
-    combobox.pack(side="right", padx=5)
-    return combobox
-
-def create_labeled_spinbox(parent, label_text, from_, to):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    spinbox = ttk.Spinbox(frame, from_=from_, to=to, width=5)
-    spinbox.pack(side="right", padx=5)
-    return spinbox
-
-def create_labeled_button(parent, label_text, button_text, command):
-    frame = ttk.Frame(parent)
-    frame.pack(pady=10)
-    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
-    ttk.Button(frame, text=button_text, command=command).pack(side="right", padx=5)
-
-first_name_entry = create_labeled_entry(content_frame, "الاسم الأول")
-father_name_entry = create_labeled_entry(content_frame, "الاسم الأب")
-last_name_entry = create_labeled_entry(content_frame, "الكنية")
-mother_name_entry = create_labeled_entry(content_frame, "اسم الأم")
-
-# Gender selection
-gender_frame = ttk.Frame(content_frame)
-gender_frame.pack(pady=10)
-selected_gender = StringVar()
-ttk.Label(gender_frame, text="الجنس").pack(side="right", padx=5)
-ttk.Radiobutton(gender_frame, text="ذكر", variable=selected_gender, value="ذكر").pack(side="right", padx=5)
-ttk.Radiobutton(gender_frame, text="أنثى", variable=selected_gender, value="أنثى").pack(side="right", padx=5)
-
-# Birth date
-date_frame = ttk.Frame(content_frame)
-date_frame.pack(pady=10)
-ttk.Label(date_frame, text="تاريخ الولادة").pack(side="right", padx=5)
-ttk.Label(date_frame, text="اليوم").pack(side="right")
-selected_day = ttk.Spinbox(date_frame, from_=1, to=31, width=5)
-selected_day.pack(side="right", padx=5)
-ttk.Label(date_frame, text="الشهر").pack(side="right")
-selected_month = ttk.Spinbox(date_frame, from_=1, to=12, width=5)
-selected_month.pack(side="right", padx=5)
-ttk.Label(date_frame, text="السنة").pack(side="right")
-selected_year = ttk.Spinbox(date_frame, width=5)
-selected_year.pack(side="right", padx=5)
-
-city_entry = create_labeled_combobox(content_frame, "محل الولادة", ["دمشق", "حلب", "اللاذقية"])
-residential_registration_entry = create_labeled_entry(content_frame, "قيد النفوس")
-national_number_entry = create_labeled_entry(content_frame, "الرقم الوطني")
-full_address_entry = create_labeled_entry(content_frame, "العنوان المفصّل")
-
-# Profile picture button
-profile_path = None
-create_labeled_button(content_frame, "الصورة الشخصية", "اختر الصورة الشخصية", lambda: file_picker(set_profile_path, title="اختر صورة شخصية"))
-
-education_entry = create_labeled_combobox(content_frame, "المستوى العلمي", ["أمّي", "ابتدائي", "إعدادي", "ثانوي", "معهد", "جامعة", "ماجستر", "دكتور"])
-academic_specialization_entry = create_labeled_entry(content_frame, "الاختصاص")
-job_entry = create_labeled_entry(content_frame, "المهنة التي يتقنها")
-current_job_entry = create_labeled_entry(content_frame, "المهنة الحالية")
-
-# Height & weight
-selected_height = create_labeled_spinbox(content_frame, "الطول (سم)", 0, 300)
-selected_weight = create_labeled_spinbox(content_frame, "الوزن (كغ)", 0, 300)
-
-eye_color_entry = create_labeled_combobox(content_frame, "لون العينين", ["أسود", "بني", "أزرق", "أخضر", "عسلي"])
-hair_color_entry = create_labeled_combobox(content_frame, "لون الشعر", ["أسود", "بني", "أشقر", "أحمر"])
-skin_color_entry = create_labeled_combobox(content_frame, "لون البشرة", ["أبيض", "حنطي", "أسمر", "أسود"])
-unique_features_entry = create_labeled_entry(content_frame, "علامات فارقة")
-
-# Social status (correct label)
-social_status_entry = create_labeled_combobox(content_frame, "الوضع الاجتماعي", ["أعزب", "متزوج", "مطلق", "أرمل"])
-
-# Children
-children_number_entry = create_labeled_entry(content_frame, "عدد الأطفال")
-
-
-
-# Frame to hold generated child entry fields
-children_frame = ttk.Frame(content_frame)
+# Frame to hold dynamic children widgets (label, entry, gender, and age)
+children_frame = ttk.Frame(root)
 children_frame.pack(pady=10)
 
-# Button to generate child entries
-ttk.Button(children_frame, text="إنشاء حقول الأولاد", command=lambda: generate_entries(children_frame=children_frame, children_number_entry=children_number_entry, children_entries=children_entries)).pack(side="right", pady=5)
+# List to store dynamic children (each child has label, entry, gender_frame, and age_spinbox)
+children_widgets = []
 
+# Spinbox to select number of children
+child_count_var = tk.StringVar(value="0")
+child_count_spinbox = ttk.Spinbox(
+    root, from_=0, to=10, textvariable=child_count_var, width=5, command=lambda: update_children()
+)
+child_count_spinbox.pack(pady=10)
 
+def update_children():
+    count = int(child_count_var.get())
 
-# List to store child entry widgets
-children_entries = []
+    # Remove extra children widgets if count decreased
+    while len(children_widgets) > count:
+        label, entry, gender_frame, age_spinbox = children_widgets.pop()
+        label.destroy()
+        entry.destroy()
+        gender_frame.destroy()
+        age_spinbox.destroy()
 
+    # Add missing children widgets if count increased
+    while len(children_widgets) < count:
+        index = len(children_widgets) + 1  # Child index starts at 1
+        
+        # Create label
+        label = ttk.Label(children_frame, text=f"Child {index}")
+        label.pack(pady=5)
+        
+        # Create entry for child name
+        entry = ttk.Entry(children_frame)
+        entry.pack(pady=5)
+        
+        # Create gender radio buttons
+        gender_frame, gender_variable = create_radio_group(children_frame, "Gender", ["ذكر", "انثى"])
+        gender_frame.pack(pady=5)
 
+        # Create age spinbox for each child (from 0 to 18)
+        age_spinbox = ttk.Spinbox(children_frame, from_=0, to=18, width=5)
+        age_spinbox.pack(pady=5)
 
-# Extract names & genders
+        # Store them together in children_widgets
+        children_widgets.append((label, entry, gender_frame, age_spinbox))
 
+def create_radio_group(parent, label_text, options, variable=None):
+    frame = ttk.Frame(parent)
+    frame.pack(pady=10)
 
+    if variable is None:
+        variable = tk.StringVar()
 
-# Buttons
-add_btn_frame = ttk.Frame(content_frame)
-add_btn_frame.pack(pady=10)
-ttk.Button(
-    add_btn_frame,
-    text="إضافة", 
-    command=lambda: submit_data(
-        first_name=first_name_entry.get(),
-        father_name=father_name_entry.get(),
-        last_name=last_name_entry.get(),
-        mother_name=mother_name_entry.get(),
-        gender=selected_gender.get(),
-        date=get_full_date(selected_day.get(), selected_month.get(), selected_year.get()),
-        city=city_entry.get(),
-        residential_registration=residential_registration_entry.get(),
-        national_number=national_number_entry.get(),
-        full_address=full_address_entry.get(),
-        profile_path=profile_path,
-        education=education_entry.get(),
-        academic_specialization=academic_specialization_entry.get(),
-        job=job_entry.get(),
-        current_job=current_job_entry.get(),
-        height=selected_height.get(),
-        weight=selected_weight.get(),
-        eye_color=eye_color_entry.get(),
-        hair_color=hair_color_entry.get(),
-        skin_color=skin_color_entry.get(),
-        unique_features=unique_features_entry.get(),
-        children_number=children_number_entry.get(),
-        children=[(entry.get(), gender.get()) for entry, gender in children_entries])
-).pack(pady=10)
-# submit_button = ctk.CTkButton(frm, text="إضافة", command=submit_data).grid(row=5, column=0)
+    ttk.Label(frame, text=label_text).pack(side="right", padx=5)
 
-content_window = canvas.create_window((canvas.winfo_width() // 2, 0), window=content_frame, anchor="n")
-canvas.bind("<Configure>", resize_centering)  # Recenter on window resize
-content_frame.bind("<Configure>", update_scroll_region)
+    for option in options:
+        ttk.Radiobutton(frame, text=option, variable=variable, value=option).pack(
+            side="right", padx=5
+        )
+
+    return frame, variable  # Return both the frame and the variable
+
+# Function to print the current form data
+def print_form_data():
+    for index, (label, entry, gender_frame, age_spinbox) in enumerate(children_widgets):
+        entry_value = entry.get()  # Get the value of the Entry widget (name)
+        gender_value = gender_frame.winfo_children()[1].get()  # Get the selected gender value
+        age_value = age_spinbox.get()  # Get the selected age value
+        print(f"Child {index + 1}: Name: {entry_value}, Gender: {gender_value}, Age: {age_value}")
+
+# Print Button
+print_button = ttk.Button(root, text="Print Form Data", command=print_form_data)
+print_button.pack(pady=20)
+
 root.mainloop()
